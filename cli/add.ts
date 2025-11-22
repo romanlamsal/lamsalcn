@@ -18,6 +18,7 @@ if (!existsSync(configPath)) {
     process.exit(1);
 }
 
+
 const force = process.argv.includes("--force")
 const verbose = process.argv.includes("--verbose")
 
@@ -27,7 +28,7 @@ const registry = await fetch("https://raw.githubusercontent.com/romanlamsal/lams
     .then(res => res.json() as Promise<RegistryEntry[]>).catch((err) => {
         console.error("Could not fetch registry:", err)
         process.exit(1);
-    })
+    });
 
 async function getAdded(): Promise<string[]> {
     const addPos = process.argv.indexOf('add')
@@ -118,6 +119,7 @@ async function copySources(added: string[]) {
 
         const outputPath = join(outputDir, relativeOutputPath);
 
+
         console.log(`Copying ${regEntryName} to ${outputPath}.`)
 
         const emitter = degit(repository + config.entry, {
@@ -131,7 +133,14 @@ async function copySources(added: string[]) {
 
         try {
             await emitter.clone(degitOutput)
-            execSync(`mv ${degitOutput} ${cwdPath(outputPath)}`, { stdio: "inherit" })
+
+            const degitOutputIsFile = outputPath.match(/.+\.\w+$/)
+            // output is directory but does not yet exist
+            if (!degitOutputIsFile && !existsSync(outputPath)) {
+                mkdirSync(outputPath)
+            }
+
+            execSync(`mv ${degitOutput}${!degitOutputIsFile ? "/*" : ""} ${cwdPath(outputPath)}`, { stdio: "inherit" })
         } finally {
             rmSync(degitOutput, { recursive: true, force: true })
         }

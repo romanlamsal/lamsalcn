@@ -1,7 +1,7 @@
 import {checkbox, confirm} from "@inquirer/prompts";
 import type {RegistryEntry} from "../registry";
 import process from "node:process";
-import {existsSync, mkdir, mkdirSync, readFileSync, rmSync} from "node:fs";
+import {existsSync, mkdirSync, readFileSync, rmSync} from "node:fs";
 import {cwdPath} from "./cwd-path";
 import {CONFIG_FILENAME, type LamsalcnConfig} from "./config-file";
 import degit from "degit";
@@ -17,7 +17,6 @@ if (!existsSync(configPath)) {
     console.error(`Need to call "init" first.`)
     process.exit(1);
 }
-
 
 const force = process.argv.includes("--force")
 const verbose = process.argv.includes("--verbose")

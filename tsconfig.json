@@ -29,6 +29,7 @@
   "include": [
     "cli/**/*",
     "registry/**/*",
-    "lamsalcn.ts"
+    "lamsalcn.ts",
+    "biome.json"
   ]
 }

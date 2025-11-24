@@ -3,9 +3,10 @@
 import { existsSync, mkdirSync, rmSync } from "node:fs"
 import { writeFile } from "node:fs/promises"
 import process from "node:process"
+import { pathToFileURL } from "url"
 import { z } from "zod"
-import packageJson from "./package.json" with { type: "json" }
-import { RegistryEntrySchema } from "./registry/RegistryEntry.ts"
+import packageJson from "../package.json" with { type: "json" }
+import { RegistryEntrySchema } from "../registry/RegistryEntry.ts"
 
 const registryEntries = [
     {
@@ -50,7 +51,7 @@ const schemaFileName = `schema.json`
 
 export async function buildAndValidate() {
     for (const registryEntry of registryEntries) {
-        if (!existsSync(new URL("." + registryEntry.entry, import.meta.url))) {
+        if (!existsSync(new URL(".." + registryEntry.entry, import.meta.url))) {
             console.error(`Registry entry ${registryEntry.name} not found at ${registryEntry.entry}`)
             process.exit(1)
         }
@@ -81,7 +82,7 @@ export async function buildAndValidate() {
 
 /** @param {string} outputDirectory */
 export async function writeFiles(outputDirectory) {
-    const outputDirectoryUrl = new URL(outputDirectory.replaceAll("\/*$", "") + "/", import.meta.url)
+    const outputDirectoryUrl = new URL(outputDirectory.replaceAll("\/*$", "") + "/", pathToFileURL(process.cwd() + "/"))
 
     rmSync(outputDirectoryUrl, { recursive: true, force: true })
     mkdirSync(outputDirectoryUrl, { recursive: true })

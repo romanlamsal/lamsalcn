@@ -36,7 +36,7 @@ jobs:
 
       - name: Build static files
         id: build
-        run: node build-registry.js "$OUTPUT_PATH"
+        run: node scripts/build-registry.js "$OUTPUT_PATH"
         env:
           NODE_OPTS: '--experimental-strip-types'
 

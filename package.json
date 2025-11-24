@@ -9,7 +9,6 @@
   "main": "build/lamsal-kit.js",
   "types": "build/lamsal-kit.d.ts",
   "scripts": {
-    "build": "node build.js",
     "release": "node build.js && npm publish",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
@@ -17,8 +16,7 @@
     "package.json",
     "build/lamsal-kit.js"
   ],
-  "keywords": [],
-  "author": "",
+  "author": "Roman Lamsal <roman@lamsal.de>",
   "license": "ISC",
   "devDependencies": {
     "@biomejs/biome": "^2.3.7",

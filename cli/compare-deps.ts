@@ -1,4 +1,4 @@
-import type { RegistryEntry } from "../build-registry.js"
+import type { RegistryEntry } from "../registry/RegistryEntry"
 import { compareVersions, parseVersion } from "./parse-version"
 
 type DependencyStats = { name: string; nextVersion: string; install: boolean; conflictWith?: string; dev: boolean }

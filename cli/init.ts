@@ -1,11 +1,11 @@
-import {input, select} from "@inquirer/prompts";
-import {existsSync, readFileSync, writeFileSync} from "node:fs";
-import * as process from "node:process";
-import {cwdPath} from "./cwd-path";
-import {CONFIG_FILENAME, LamsalcnConfig} from "./config-file";
-import {PackageManager, packageManagers} from "./package-manager";
+import { existsSync, readFileSync, writeFileSync } from "node:fs"
+import * as process from "node:process"
+import { input, select } from "@inquirer/prompts"
+import { CONFIG_FILENAME, type LamsalcnConfig } from "./config-file"
+import { cwdPath } from "./cwd-path"
+import { type PackageManager, packageManagers } from "./package-manager"
 
-const configFilePath = cwdPath(CONFIG_FILENAME);
+const configFilePath = cwdPath(CONFIG_FILENAME)
 const configExists = existsSync(configFilePath)
 
 const force = process.argv.includes("--force")
@@ -21,16 +21,14 @@ if (configExists && force) {
 }
 
 async function getPackageManager(): Promise<PackageManager> {
-    const flatPackageManagers = Object.entries(packageManagers).map(([k, v]) => ({...v, name: k as PackageManager}))
+    const flatPackageManagers = Object.entries(packageManagers).map(([k, v]) => ({ ...v, name: k as PackageManager }))
 
     try {
-        const { packageManager } = JSON.parse(readFileSync(cwdPath("package.json"), "utf-8"));
+        const { packageManager } = JSON.parse(readFileSync(cwdPath("package.json"), "utf-8"))
         if (packageManager) {
             return packageManager.split("@")[0]
         }
-    } catch {
-
-    }
+    } catch {}
 
     for (const candidate of flatPackageManagers) {
         if (existsSync(cwdPath(candidate.lockfile))) {
@@ -63,10 +61,11 @@ async function getPackageManager(): Promise<PackageManager> {
 
 const packageManager = await getPackageManager()
 
-let srcDirectory: string;
+let srcDirectory: string
 try {
     srcDirectory = await input({
-        message: `Add new sources to ${process.cwd()}/`, });
+        message: `Add new sources to ${process.cwd()}/`,
+    })
 } catch (e) {
     if (e instanceof Error && e.name === "ExitPromptError") {
         console.log("Aborted.")
@@ -76,10 +75,10 @@ try {
 
 const config: LamsalcnConfig = {
     packageManager,
-    srcDirectory: srcDirectory.replace(/^\.?\/*/, "./")
+    srcDirectory: srcDirectory.replace(/^\.?\/*/, "./"),
 }
 
-const configContent = JSON.stringify(config, null, 2);
+const configContent = JSON.stringify(config, null, 2)
 
 console.log("Final config:")
 console.log(configContent)

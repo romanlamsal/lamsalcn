@@ -10,6 +10,6 @@ export const packageManagers = {
     bun: {
         lockfile: "bun.lock",
         execBinary: "bunx",
-    }
+    },
 }
-export type PackageManager = keyof typeof packageManagers;
+export type PackageManager = keyof typeof packageManagers

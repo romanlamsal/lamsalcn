@@ -9,7 +9,7 @@ import { checkbox, confirm } from "@inquirer/prompts"
 import degit from "degit"
 import minimist from "minimist"
 import { z } from "zod"
-import type { RegistryEntry } from "../registry"
+import type { RegistryEntry } from "../registry/RegistryEntry"
 import { compareDeps } from "./compare-deps"
 import { CONFIG_FILENAME, type LamsalcnConfig } from "./config-file"
 import { cwdPath } from "./cwd-path"
@@ -37,13 +37,13 @@ const { _: entriesToAdd, force, verbose, out } = ArgsSchema.parse(minimist(proce
 const lamsalCnConfig = JSON.parse(readFileSync(configPath, "utf8")) as LamsalcnConfig
 
 async function getRegistry() {
-    if (process.env["REGISTRY_JSON"]) {
+    if (process.env["REGISTRY_JSON"] && !URL.canParse(process.env["REGISTRY_JSON"])) {
         return JSON.parse(readFileSync(process.env["REGISTRY_JSON"], "utf8")) as RegistryEntry[]
     }
 
-    return fetch("https://raw.githubusercontent.com/romanlamsal/lamsal-kit/refs/heads/main/registry.json").then(
-        res => res.json() as Promise<RegistryEntry[]>,
-    )
+    return fetch(process.env["REGISTRY_JSON"] ?? "https://romanlamsal.github.io/lamsal-kit/registry.json")
+        .then(res => res.json() as Promise<{ entries: RegistryEntry[] }>)
+        .then(res => res.entries)
 }
 
 const registry = await getRegistry()
@@ -69,7 +69,7 @@ async function getAdded(): Promise<string[]> {
         return checkbox({
             message: "Code to add",
             choices: registeredSources,
-        })
+        }).catch(e => (e instanceof Error && e.name === "ExitPromptError" ? process.exit(1) : e))
     } catch (err) {
         if (err instanceof Error && err.name === "ExitPromptError") {
             console.log("Aborted.")

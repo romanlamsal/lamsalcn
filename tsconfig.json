@@ -26,10 +26,5 @@
     "composite": true
   },
   "exclude": ["node_modules"],
-  "include": [
-    "cli/**/*",
-    "registry/**/*",
-    "lamsal-kit.ts",
-    "biome.json"
-  ]
+  "include": ["cli/**/*", "registry/**/*", "lamsal-kit.ts", "biome.json", "build-registry.js"]
 }

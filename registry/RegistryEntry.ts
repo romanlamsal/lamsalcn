@@ -1,4 +1,4 @@
-import {z} from "zod";
+import { z } from "zod"
 
 export const RegistryEntrySchema = z.object({
     name: z.string(),
@@ -9,4 +9,3 @@ export const RegistryEntrySchema = z.object({
 })
 
 export type RegistryEntry = z.infer<typeof RegistryEntrySchema>
-

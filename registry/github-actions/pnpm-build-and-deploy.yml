@@ -48,6 +48,7 @@ jobs:
           mv "$OUT_DIR" "bundle/$OUT_DIR"
 
       - uses: romanlamsal/gueterbahnhof/action@main
+        if: github.ref == 'refs/heads/main'
         with:
           host: https://gueterbahnhof.lamsal.de
           app_name: dieseltoolbar

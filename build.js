@@ -1,15 +1,15 @@
-import * as esbuild from 'esbuild';
+import * as esbuild from "esbuild"
 
 await esbuild.build({
-    entryPoints: ['lamsalcn.ts'],
+    entryPoints: ["lamsal-kit.ts"],
     bundle: true,
-    outfile: 'lamsalcn.js',
-    format: 'esm',
-    platform: 'node',
+    outfile: "build/lamsal-kit.js",
+    format: "esm",
+    platform: "node",
     banner: {
         js: `
     import { createRequire } from 'module';
     const require = createRequire(import.meta.url);
-  `
-    }
-});
+  `,
+    },
+})

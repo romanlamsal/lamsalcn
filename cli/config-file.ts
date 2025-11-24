@@ -1,8 +1,8 @@
-import {PackageManager} from "./package-manager";
+import type { PackageManager } from "./package-manager"
 
-export const CONFIG_FILENAME = "lamsalcn.json";
+export const CONFIG_FILENAME = "lamsal-kit.json"
 
 export type LamsalcnConfig = {
-    packageManager: PackageManager,
+    packageManager: PackageManager
     srcDirectory: string
 }

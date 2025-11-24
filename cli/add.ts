@@ -3,10 +3,12 @@ import { randomUUID } from "node:crypto"
 import { existsSync, mkdirSync, readFileSync, rmSync, statSync } from "node:fs"
 import { readFile } from "node:fs/promises"
 import * as os from "node:os"
-import { join } from "node:path"
+import { dirname, join } from "node:path"
 import process from "node:process"
 import { checkbox, confirm } from "@inquirer/prompts"
 import degit from "degit"
+import minimist from "minimist"
+import { z } from "zod"
 import type { RegistryEntry } from "../registry"
 import { compareDeps } from "./compare-deps"
 import { CONFIG_FILENAME, type LamsalcnConfig } from "./config-file"
@@ -18,8 +20,19 @@ if (!existsSync(configPath)) {
     process.exit(1)
 }
 
-const force = process.argv.includes("--force")
-const verbose = process.argv.includes("--verbose")
+const ArgsSchema = z
+    .object({
+        _: z.string().array().default([]),
+        out: z.string().optional(),
+        force: z.boolean().optional(),
+        verbose: z.boolean().optional(),
+    })
+    .refine(
+        val => !val.out || (val.out && val._.length === 1),
+        "Cannot use 'out' without specific registry entry to add.",
+    )
+
+const { _: entriesToAdd, force, verbose, out } = ArgsSchema.parse(minimist(process.argv.slice(3)))
 
 const lamsalCnConfig = JSON.parse(readFileSync(configPath, "utf8")) as LamsalcnConfig
 
@@ -28,7 +41,7 @@ async function getRegistry() {
         return JSON.parse(readFileSync(process.env["REGISTRY_JSON"], "utf8")) as RegistryEntry[]
     }
 
-    return fetch("https://raw.githubusercontent.com/romanlamsal/lamsalcn/refs/heads/main/registry.json").then(
+    return fetch("https://raw.githubusercontent.com/romanlamsal/lamsal-kit/refs/heads/main/registry.json").then(
         res => res.json() as Promise<RegistryEntry[]>,
     )
 }
@@ -41,19 +54,15 @@ const registry = await getRegistry()
     })
 
 async function getAdded(): Promise<string[]> {
-    const addPos = process.argv.indexOf("add")
-
-    const added = process.argv.slice(addPos + 1, process.argv.length)
-
     const registeredSources = registry.map(regEntry => regEntry.name)
-    if (added.length) {
-        const notFound = added.filter(candidate => !registeredSources.includes(candidate))
+    if (entriesToAdd.length) {
+        const notFound = entriesToAdd.filter(candidate => !registeredSources.includes(candidate))
         if (notFound.length) {
             console.log(`Unknown option${notFound.length !== 1 ? "s" : ""}: "${notFound.join(", ")}"`)
             process.exit(1)
         }
 
-        return added
+        return entriesToAdd
     }
 
     try {
@@ -82,7 +91,7 @@ async function clone(entry: string, cb: (outputLocation: string) => Promise<void
     })
 
     const id = randomUUID()
-    const degitOutput = join(os.tmpdir(), `lamsalcn-${id}`)
+    const degitOutput = join(os.tmpdir(), `lamsal-kit-${id}`)
 
     try {
         await emitter.clone(degitOutput)
@@ -136,33 +145,26 @@ async function copySources(added: string[]) {
         overallDeps.push(...comparedDeps.filter(d => !d.dev && d.install).map(d => d.name + "@" + d.nextVersion))
         overallDevDeps.push(...comparedDeps.filter(d => d.dev && d.install).map(d => d.name + "@" + d.nextVersion))
 
-        await clone(config.entry, async outputLocation => {
-            const outputDir = (() => {
-                // copyTo is undefined or a directory
-                if (!config.copyTo?.match(/.+\.\w+$/)) {
-                    return config.copyTo ?? lamsalCnConfig.srcDirectory
-                }
+        const copyTo = out ?? config.copyTo
 
-                const pathParts = config.copyTo!.split("/")
-                return pathParts.slice(0, pathParts.length - 1).join("/")
-            })()
+        await clone(config.entry, async outputLocation => {
+            const outputDir = dirname(cwdPath(copyTo ?? lamsalCnConfig.srcDirectory))
 
             if (!existsSync(outputDir)) {
                 mkdirSync(outputDir, { recursive: true })
             }
 
-            const outputPath = cwdPath(outputDir, config.copyTo ?? config.entry.replace("/registry/", "")) // will be a directory
-            console.log(`Copying ${regEntryName} to ${outputPath}.`)
+            const outputPath = join(outputDir, copyTo ?? config.entry.replace("/registry/", "")) // will be a directory
+            console.log(`Copying ${regEntryName} to ${outputPath}`)
 
             // files can be copied as-is to their output directory
             if (statSync(outputLocation).isFile()) {
-                execSync(
-                    `mv ${outputLocation} ${cwdPath(outputDir, config.copyTo ?? config.entry.replace("/registry/", ""))}`,
-                )
+                execSync(`mv ${outputLocation} ${outputPath}`)
                 return
             }
 
-            const copySource = // if output location is already an existing directory, copy only the contents
+            // if output location is already an existing directory, copy only the contents
+            const copySource =
                 existsSync(outputPath) && statSync(outputLocation).isDirectory()
                     ? join(outputLocation, "*")
                     : outputLocation
@@ -180,6 +182,7 @@ async function copySources(added: string[]) {
         console.log("Adding deps:", overallDeps.join(","))
         execSync(`${packageManager} add ${overallDeps.join(" ")}`, { cwd: process.cwd(), stdio: "inherit" })
     }
+
     if (overallDevDeps.length) {
         console.log("Adding devDeps:", overallDeps.join(","))
         execSync(

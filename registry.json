@@ -22,5 +22,10 @@
     "name": "CLAUDE.md (webapp)",
     "entry": "/registry/CLAUDE-webapp.md",
     "copyTo": "./CLAUDE-webapp.md"
+  },
+  {
+    "name": "gueterbahnhof build&deploy",
+    "entry": "/registry/github-actions/pnpm-build-and-deploy.yml",
+    "copyTo": "./.github/workflows/build-and-deploy.yml"
   }
 ]
